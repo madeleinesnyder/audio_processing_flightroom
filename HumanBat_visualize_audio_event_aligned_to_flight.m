@@ -47,6 +47,7 @@ desired_event = round(desired_event+(8.41858*192000)+(1.614*192000));
 %desired_event = 1378936894;
 desired_event = 208464052;
 
+% Sample
 % Find which chunk and seg this event is from.
 file_parts = dir(audio_base); 
 file_parts = strsplit(file_parts(end-3).name,'_');
