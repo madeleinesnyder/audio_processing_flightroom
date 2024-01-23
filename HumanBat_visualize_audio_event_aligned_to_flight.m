@@ -15,10 +15,8 @@ mic_num = 4;
 context_interval_ = 5000000;
 
 %% Load in the audio data
-audio_base = strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/1464314684/processed/',num2str(batdate),'/audio/');
+audio_base = strcat('C:\Users\YartsevLabComputer5\Desktop\audio_data\',num2str(batdate),'\');
 load(strcat(audio_base,'event_timestamps.mat'),'event_locs');
-%load(strcat(audio_base,'sorted_event_timestamps.mat'),'sorted_events');
-load(strcat(audio_base,'ttl_first_sample.mat'));
 
 % Load in ttl data
 alignment_='start';
@@ -42,15 +40,15 @@ desired_event = sorted_events(desired_event);
 
 %desired_event = first_ttl_sample + 10;
 %desired_event = 935703747;
-desired_event = round(desired_event+(8.41858*192000)+(1.614*192000));
+%desired_event = round(desired_event+(8.41858*192000)+(1.614*192000));
 %desired_event = round(desired_event+(5.59508*192000));
 %desired_event = 1378936894;
-desired_event = 208464052;
+%desired_event = 208464052;
 
 % Sample
 % Find which chunk and seg this event is from.
 file_parts = dir(audio_base); 
-file_parts = strsplit(file_parts(end-3).name,'_');
+file_parts = strsplit(file_parts(end-4).name,'_');
 max_chunks = str2num(file_parts{end-2});
 running_chunk_start = 0;
 desired_chunk = []; chunk_start = []; amount_into_chunk = [];
