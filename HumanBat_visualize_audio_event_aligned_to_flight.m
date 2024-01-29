@@ -2,6 +2,8 @@
 
 % List of good segments (desired events)
 
+clear all; close all;
+
 % For a given bat, and session
 Bat = 32626; logger = 15;
 batdate = 221126;
@@ -15,7 +17,7 @@ mic_num = 4;
 context_interval_ = 5000000;
 
 %% Load in the audio data
-audio_base = strcat('C:\Users\YartsevLabComputer5\Desktop\audio_data\',num2str(batdate),'\');
+audio_base = strcat('C:\Users\YartsevLabComputer5\Box\Audio_Project_2024\',num2str(batdate),'\chunked_audio_data\');
 load(strcat(audio_base,'event_timestamps.mat'),'event_locs');
 
 % Load in ttl data
@@ -26,7 +28,6 @@ load(strcat(audio_base,'ttl_last_sample.mat'));
 
 %sorted_events = sorted_events;%-first_ttl_sample;
 sorted_events = unique(sort([event_locs{1},event_locs{2},event_locs{3},event_locs{4}]));
-%sorted_events = unique(sort([event_locs{1}]));
 
 % Plot the sorted events and user-select an audio event timestamp to plot
 % around.
@@ -38,6 +39,8 @@ hold off;
 desired_event = find(abs(sorted_events-yClick) == min(abs(sorted_events-yClick)));
 desired_event = sorted_events(desired_event);
 
+%desired_event = 208464052;
+
 %desired_event = first_ttl_sample + 10;
 %desired_event = 935703747;
 %desired_event = round(desired_event+(8.41858*192000)+(1.614*192000));
@@ -48,13 +51,13 @@ desired_event = sorted_events(desired_event);
 % Sample
 % Find which chunk and seg this event is from.
 file_parts = dir(audio_base); 
-file_parts = strsplit(file_parts(end-4).name,'_');
+file_parts = strsplit(file_parts(end-7).name,'_');
 max_chunks = str2num(file_parts{end-2});
 running_chunk_start = 0;
 desired_chunk = []; chunk_start = []; amount_into_chunk = [];
 for tt = 1:max_chunks
 
-    chunk_filename = dir(strcat(audio_base,'/audioConCat_mic_1_segment_chunk_',num2str(tt),'_break_*.mat'));
+    chunk_filename = dir(strcat(audio_base,'\audioConCat_mic_1_segment_chunk_',num2str(tt),'_break_*.mat'));
     load(strcat(audio_base,chunk_filename.name));
     len_chunk = length(audioConCat);
     
@@ -78,7 +81,7 @@ event_vec_end = desired_event+context_interval_;
 whitenedSignal_mm = {};
 for mm = 1:mic_num 
     
-    audio_file = dir(strcat(audio_base,'/audioConCat_mic_',num2str(mm),'_segment_chunk_',num2str(chunk),'_break_*.mat'));
+    audio_file = dir(strcat(audio_base,'\audioConCat_mic_',num2str(mm),'_segment_chunk_',num2str(chunk),'_break_*.mat'));
     load(strcat(audio_base,audio_file.name));
 
     % Apply segment bounds to desired segment to plot 
@@ -119,40 +122,29 @@ end
 whitenedSignal_allmics = cell2mat(whitenedSignal_mm);
 sum_whitenedSignal_allmics = sum(whitenedSignal_allmics,2);
     
-% above_zero_events = (sorted_events-event_vec_start);
-% above_zero_events = above_zero_events(above_zero_events>0);
-% above_zero_events = above_zero_events(above_zero_events<length(sum_whitenedSignal_allmics));
-% above_zero_events_aligned_to_start_of_session = above_zero_events+event_vec_start;
-
 %% Align the above_zero_events to the flight data 
 above_zero_events = (sorted_events-event_vec_start); %above_zero_events = (scaled_zerod_loc_vec-event_vec_start);
 above_zero_events = above_zero_events(above_zero_events>=0);
 above_zero_events(above_zero_events==0) = [];
 above_zero_events = above_zero_events(above_zero_events<length(sum_whitenedSignal_allmics));
-%above_zero_events_aligned_to_start_of_session = above_zero_events+event_vec_start;
-%[above_zero_events_aligned,ttl_events_aligned] = HumanBat_align_audio_to_ciholas(Bat,batdate,logger,alignment_,above_zero_events_aligned_to_start_of_session,pk_loc_vec,first_ttl_sample,last_ttl_sample);
-
-% above_zero_events_aligned are the motu timestamps of the audio events in
-% the chosen segment ALIGNED to the "alignement_" of the session.
-
-%start_sample_ciholas = (event_vec_start-first_ttl_sample)/motu_Fs*ciholas_Fs;
-%end_sample_ciholas = (event_vec_end-first_ttl_sample)/motu_Fs*ciholas_Fs;
 
 start_sample_ciholas = round((event_vec_start-first_ttl_sample)/motu_Fs*ciholas_Fs);
 if start_sample_ciholas == 0; start_sample_ciholas = 1; end;
 end_sample_ciholas = round((event_vec_end-first_ttl_sample)/motu_Fs*ciholas_Fs);
 
 %% Load in the flight data, extracted behavior, and ephys data
-exp_data_path = strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/1464314684/processed/',num2str(batdate),'/');
+exp_data_path = strcat('C:\Users\YartsevLabComputer5\Box\Audio_Project_2024\',num2str(batdate),'\');
     
 % Load in the flight data 
-load(strcat(exp_data_path,'ciholas/aligned_bat_position_data_',num2str(Bat),'.mat'));
+Bat = 32626;
+load(strcat(exp_data_path,'positional_data\aligned_bat_position_data_',num2str(Bat),'.mat'));
 
 % Load in the Extracted Behavior data
-load(strcat(exp_data_path,'ciholas/Extracted_Behavior_', num2str(batdate),'_',num2str(Bat),'.mat'));
+load(strcat(exp_data_path,'positional_data\Extracted_Behavior_', num2str(batdate),'_',num2str(Bat),'.mat'));
 
 % Load in spike data
-load(strcat(exp_data_path,'ephys/logger',num2str(logger),'/extracted_data/B_ephys_data_aligned.mat'));
+logger=15;
+load(strcat(exp_data_path,'ephys_data\logger',num2str(logger),'\B_ephys_data_aligned.mat'));
 
 %% Find the ciholas and ephys timestamps for this audio segment
 
@@ -205,7 +197,7 @@ set(gca, 'Color', 'k');
 set(gca, 'XColor', 'w');
 set(gca, 'YColor', 'w');
 
-ciholas_r_obat = load(strcat(exp_data_path,'ciholas/aligned_bat_position_data_14643.mat'));
+ciholas_r_obat = load(strcat(exp_data_path,'positional_data/aligned_bat_position_data_14643.mat'));
 
 scatter3(ciholas_r_obat.ciholas_r(start_sample_ciholas:end_sample_ciholas,1),...
     ciholas_r_obat.ciholas_r(start_sample_ciholas:end_sample_ciholas,2),...
@@ -225,10 +217,7 @@ for mm=1:mic_num
 end
 ee = NaN(1,length(sum_whitenedSignal_allmics));
 ee(above_zero_events) = 1;
-%ee_spec = NaN(1,length(sum_whitenedSignal_allmics));
-%ee_spec( desired_event-event_vec_start) = 1;
 scatter([1:length(sum_whitenedSignal_allmics)],ee,10,'r');
-%scatter([1:length(sum_whitenedSignal_allmics)],ee_spec,10,'filled','g');
 set(gca, 'Color', 'k');
 set(gca, 'XColor', 'w');
 set(gca, 'YColor', 'w');
@@ -291,18 +280,18 @@ hold off;
 subplot(4,1,3); hold on; 
 
 % Load in the Extracted Behavior data
-load(strcat(exp_data_path,'ciholas/Extracted_Behavior_', num2str(batdate),'_',num2str(Bat),'.mat'));
+load(strcat(exp_data_path,'\positional_data\Extracted_Behavior_', num2str(batdate),'_',num2str(Bat),'.mat'));
 
 % Load in spike data
-load(strcat(exp_data_path,'ephys/logger',num2str(logger),'/extracted_data/B_ephys_data_aligned.mat'));
+load(strcat(exp_data_path,'ephys_data\logger',num2str(logger),'\B_ephys_data_aligned.mat'));
 
 % First ephys TTL time
 usec_of_first_ephys_TTL = (B_ephys_data.TT_unit(1).Timestamps(1)-B_ephys_data.TT_unit(1).AlignedTimestamps(1));
 % ^^ This is the timestamp usec you want to subtract from all values in the CSC file to get the same alignment to the ephys spike file
 
 % Load in the CSC.mat data
-csc_files = dir(fullfile(strcat(exp_data_path,'ephys/logger',num2str(logger),'/extracted_data/*CSC*')));
-load(strcat(csc_files(1).folder,'/',csc_files(1).name));
+csc_files = dir(fullfile(strcat(exp_data_path,'ephys_data\logger',num2str(logger),'\*CSC*')));
+load(strcat(csc_files(1).folder,'\',csc_files(1).name));
 Fs = Estimated_channelFS_Transceiver(1);
 raw_V = double(AD_count_int16*AD_count_to_uV_factor);
 tstamps = Timestamps_of_first_samples_usec(1)+[0:length(raw_V)-1]/Fs*1e6;
@@ -372,17 +361,17 @@ obat = 14643;
 ologger = 13;
 
 % Load in the Extracted Behavior data
-load(strcat(exp_data_path,'ciholas/Extracted_Behavior_', num2str(batdate),'_',num2str(obat),'.mat'));
+load(strcat(exp_data_path,'positional_data\Extracted_Behavior_', num2str(batdate),'_',num2str(obat),'.mat'));
 
 % Load in spike data
-load(strcat(exp_data_path,'ephys/logger',num2str(ologger),'/extracted_data/B_ephys_data_aligned.mat'));
+load(strcat(exp_data_path,'ephys_data\logger',num2str(ologger),'\B_ephys_data_aligned.mat'));
 
 % First ephys TTL time
 usec_of_first_ephys_TTL = (B_ephys_data.TT_unit(1).Timestamps(1)-B_ephys_data.TT_unit(1).AlignedTimestamps(1));
 % ^^ This is the timestamp usec you want to subtract from all values in the CSC file to get the same alignment to the ephys spike file
 
 % Load in the CSC.mat data
-csc_files = dir(fullfile(strcat(exp_data_path,'ephys/logger',num2str(ologger),'/extracted_data/*CSC*')));
+csc_files = dir(fullfile(strcat(exp_data_path,'ephys_data\logger',num2str(ologger),'\*CSC*')));
 load(strcat(csc_files(1).folder,'/',csc_files(1).name));
 Fs = Estimated_channelFS_Transceiver(1);
 raw_V = double(AD_count_int16*AD_count_to_uV_factor);

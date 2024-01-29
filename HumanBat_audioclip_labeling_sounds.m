@@ -13,7 +13,7 @@ for i=1:length(above_zero_events)
 end
 
 mic_use = find(mic_tally==max(mic_tally));
-audio_file = dir(strcat(audio_base,'/audioConCat_mic_',num2str(mic_use(1)),'_segment_chunk_',num2str(chunk),'_break_*.mat'));
+audio_file = dir(strcat(audio_base,'\audioConCat_mic_',num2str(mic_use(1)),'_segment_chunk_',num2str(chunk),'_break_*.mat'));
 load(strcat(audio_base,audio_file.name));
 
 % Apply segment bounds to desired segment to plot 
@@ -28,7 +28,7 @@ if max_seg_num==0
     max_seg_num=1;
 end
 
-for i=3:max_seg_num
+for i=1:max_seg_num
     if i==max_seg_num
         seg_to_plot = signal((i-1)*5*motu_Fs+1:end);
         seg_to_plot_white = sum_whitenedSignal_allmics((i-1)*5*motu_Fs+1:end);
@@ -99,7 +99,7 @@ for i=3:max_seg_num
         set(gca, 'YColor', 'w');
         set(gcf, 'Color', 'k'); 
         hold off;
-        [x_coords, y_coords] = ginput;
+        [x_coords, y_coords] = ginput_bootleg;
         str = input('Re-label sounds? (y = yes, n = no): ', 's');
     end
 
@@ -176,50 +176,60 @@ for i=3:max_seg_num
         set(gcf, 'Color', 'k'); 
         hold off;
 
+        unlabeled = 1;
+        unlabeled_list = {'r','rs','rc','rsrc','rcrs'};
+        labeled_list = {'e','w','f','h','m','k','n'};
         str = input('Replay sound: "r". Replay slowly: "rs". Replay with more context: "rc". Replay slowly with more context: "rcrs". Label this sound: ("e" = echolocation, "w" = wingbeats, "f" = feeder, "h" = human click, "m" = madeleine voice, "k" = kevin voice, "n" = none): ', 's');
-
-        while strcmp(str,'r')
-            sound(stp*10,192000);
-            str = input('Replay sound: "r". Replay slowly: "rs". Replay with more context: "rc". Replay slowly with more context: "rcrs". Label this sound: ("e" = echolocation, "w" = wingbeats, "f" = feeder, "h" = human click, "m" = madeleine voice, "k" = kevin voice, "n" = none): ', 's');
+        if ismember(str,unlabeled_list)
+            unlabeled = 1;
+        elseif ismember(str,labeled_list)
+            unlabeled = 0;
+        else
+            disp("Not a valid command");
         end
-
-        while strcmp(str,'rs')
-            sound(stp*10,192000/2);
-            str = input('Replay sound: "r". Replay slowly: "rs". Replay with more context: "rc". Replay slowly with more context: "rcrs". Label this sound: ("e" = echolocation, "w" = wingbeats, "f" = feeder, "h" = human click, "m" = madeleine voice, "k" = kevin voice, "n" = none): ', 's');
-        end
-
-        while strcmp(str,'rc')
-            buff_ = 0.5;
-            if x_coord_sample < buff_*motu_Fs
-                stp_w = seg_to_plot_white(1:round(x_coord_sample+(buff_*motu_Fs)));
-                stp = seg_to_plot(1:round(x_coord_sample+(buff_*motu_Fs)));
-            elseif x_coords(cc)*motu_Fs+(buff_*motu_Fs) > length(seg_to_plot)
-                stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):end);
-                stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):end);
+        
+        while unlabeled 
+            if strcmp(str,'r')
+                sound(stp*10,192000);
+            elseif strcmp(str,'rs')
+                sound(stp*10,192000/2);
+            elseif strcmp(str,'rc')
+                buff_ = 0.5;
+                if x_coord_sample < buff_*motu_Fs
+                    stp_w = seg_to_plot_white(1:round(x_coord_sample+(buff_*motu_Fs)));
+                    stp = seg_to_plot(1:round(x_coord_sample+(buff_*motu_Fs)));
+                elseif x_coords(cc)*motu_Fs+(buff_*motu_Fs) > length(seg_to_plot)
+                    stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):end);
+                    stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):end);
+                else
+                    stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
+                    stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
+                end
+                sound(stp*10,192000);
+            elseif strcmp(str,'rcrs') | strcmp(str,'rsrc')
+                buff_ = 0.5;
+                if x_coord_sample < buff_*motu_Fs
+                    stp_w = seg_to_plot_white(1:round(x_coord_sample+(buff_*motu_Fs)));
+                    stp = seg_to_plot(1:round(x_coord_sample+(buff_*motu_Fs)));
+                elseif x_coords(cc)*motu_Fs+(buff_*motu_Fs) > length(seg_to_plot)
+                    stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):end);
+                    stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):end);
+                else
+                    stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
+                    stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
+                end
+                sound(stp*10,192000/2);
+            elseif ismember(str,labeled_list)
+                unlabeled = 0;
+                break;
             else
-                stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
-                stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
+                disp("Not a valid replay command or labeling command.");
             end
-            sound(stp*10,192000);
-            str = input('Replay sound: "r". Replay slowly: "rs". Replay with more context: "rc". Replay slowly with more context: "rcrs". Label this sound: ("e" = echolocation, "w" = wingbeats, "f" = feeder, "h" = human click, "m" = madeleine voice, "k" = kevin voice, "n" = none): ', 's');
+            % Prompt again
+            str = input('Replay sound: "r". Replay slowly: "rs". Replay with more context: "rc". Replay slowly with more context: "rcrs". Label this sound: ("e" = echolocation, "w" = wingbeats, "f" = feeder, "h" = human click, "m" = madeleine voice, "k" = kevin voice, "n" = none): ', 's');   
         end
-
-        while strcmp(str,'rcrs')
-            buff_ = 0.5;
-            if x_coord_sample < buff_*motu_Fs
-                stp_w = seg_to_plot_white(1:round(x_coord_sample+(buff_*motu_Fs)));
-                stp = seg_to_plot(1:round(x_coord_sample+(buff_*motu_Fs)));
-            elseif x_coords(cc)*motu_Fs+(buff_*motu_Fs) > length(seg_to_plot)
-                stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):end);
-                stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):end);
-            else
-                stp_w = seg_to_plot_white(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
-                stp = seg_to_plot(round(x_coord_sample-(buff_*motu_Fs)):round(x_coord_sample+(buff*motu_Fs)));
-            end
-            sound(stp*10,192000/2);
-            str = input('Replay sound: "r". Replay slowly: "rs". Replay with more context: "rc". Replay slowly with more context: "rcrs". Label this sound: ("e" = echolocation, "w" = wingbeats, "f" = feeder, "h" = human click, "m" = madeleine voice, "k" = kevin voice, "n" = none): ', 's');
-        end
-
+        
+        % Once labeled...
         if strcmp(str,'n')
             to_discard = [to_discard,cc];
         elseif strcmp(str,'e')
@@ -239,9 +249,11 @@ for i=3:max_seg_num
         if strcmp(str,'n')
             continue
         else
-            audiowrite(strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/audio_clips/',name),stp,motu_Fs);
+            audiowrite(strcat('C:\Users\YartsevLabComputer5\Box\Audio_Project_2024\221126\snippits_of_audio\hand_selected_snippits\',name),stp,motu_Fs);
         end
 
         close all;
     end
 end
+
+disp("Finished with segment! Rerun HumanBat_visualize_audio_event_aligned_to_flight.m to select a new segment to label");
