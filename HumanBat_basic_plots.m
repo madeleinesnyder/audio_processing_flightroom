@@ -91,7 +91,7 @@ set(gcf, 'Color', 'k'); hold on;
 colormap(hot)
 imagesc(T,F,IMAGE_MODS); set(gca,'YDir','normal');
 axis tight;
-ylabel('frequency kHz','FontWeight','bold');
+ylabel('frequency Hz','FontWeight','bold');
 xlabel('time (s)','FontWeight','bold');
 title('spectrogram of whitened data','FontWeight','bold');
 set(gca, 'Color', 'k');
