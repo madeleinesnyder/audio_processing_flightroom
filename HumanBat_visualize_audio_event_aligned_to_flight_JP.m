@@ -81,105 +81,114 @@ for mm = 1:mic_num
     
     %% Echolocation detection processing: 
     % bandpass from 20kHz to 50kHz
-    fpass_lo = 40000;
-    fpass_hi = 60000;
+    fpass_lo = 40000; %17000;
+    fpass_hi = 60000; %37000
     db_noise = 80;
-    echo_amp_env_cutoff = 0.001;
+    echo_amp_env_cutoff = 2.6;
+    fband = 100;
 
-    echoFilter = designfilt('bandpassfir','FilterOrder',20,'CutoffFrequency1',fpass_lo,'CutoffFrequency2',fpass_hi,'SampleRate',motu_Fs);
-    signal_echobp = filtfilt(echoFilter,signal);
+    % Bandpass filter
+    [B,A] = butter(2,[fpass_lo fpass_hi]/(motu_Fs/2));
+    signal_echobp = filtfilt(B,A,signal);
 
     % Make the spectrogram of the data (Input the bandpass filtered signal)
-    [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_echobp, motu_Fs, db_noise,fpass_hi);
-
-    % Run RMS amplitude calcuation (Input the bandpass filtered signal)
-    FigFlag = 1;
-    FS_high_cutoff = 50; % Play with this, set higher or lower depending on kind of input. Maybe 50? 100? for echolocations
-    FS_env = 100; % Default
-    [Amp_env_voltage, Power_env] = HumanBat_running_rms(signal_echobp, motu_Fs, FS_high_cutoff, FS_env, 'filter', FigFlag);
-    Amp_env_voltage = Amp_env_voltage*10;
-    t2 = (0:(length(Amp_env_voltage)-1))*motu_Fs/(FS_env);
-
-    % 2. Use findpeaks to find times of echocoloations 
-    mpp = 0.0008;
-    mph = echo_amp_env_cutoff;
-    mpd = ceil((192000*0.02)/(length(signal_echobp)/length(t2)));
-    [pks,locs] = findpeaks(whitenedSignal_final,'MinPeakProminence',mpp,'MinPeakHeight',mph,'MinPeakDistance',mpd)
-    Amp_env_binary2 = NaN(1,length(signal_echobp)); echolocation_timestamps = round(locs*(length(signal_echobp)/length(whitenedSignal_final))); Amp_env_binary2(echolocation_timestamps) = 0;
-    
-    % Plot
-    figure(); hold on;
-    plot(whitenedSignal_final);
-    scatter([1:5000001],Amp_env_binary2,5,'filled','red');
-
-    % echolocation_timestamps contains the timestamps of detected echolocations!
-
-    %% Feeder detection processing: 
-    % bandpass from 2500Hz to 20kHz
-    fpass_lo = 2500;
-    fpass_hi = 10000;
-    db_noise = 80;
-    feeder_amp_env_cutoff = 0.3;
-
-    feederFilter = designfilt('bandpassfir','FilterOrder',20,'CutoffFrequency1',fpass_lo,'CutoffFrequency2',fpass_hi,'SampleRate',motu_Fs);
-    signal_feederbp = filtfilt(feederFilter,signal);
-
-    % Make the spectrogram of the data (Input the bandpass filtered signal)
-    [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_feederbp, motu_Fs, db_noise, fpass_hi);
+    [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_echobp, motu_Fs, db_noise,fpass_hi,fband);
 
     % Run RMS amplitude calcuation (Input the bandpass filtered signal)
     FigFlag = 1;
     FS_high_cutoff = 100; % Play with this, set higher or lower depending on kind of input. Maybe 50? 100? for echolocations
     FS_env = 100; % Default
+    [Amp_env_voltage, Power_env] = HumanBat_running_rms(signal_echobp, motu_Fs, FS_high_cutoff, FS_env, 'filter', FigFlag);
+    Amp_env_voltage = Amp_env_voltage*10000;
+
+    % 2. Use findpeaks to find times of echocoloations 
+    mpp = 0.6;
+    mph = echo_amp_env_cutoff;
+    mpd = ceil((192000*0.02)/(length(signal_echobp)/length(Amp_env_voltage)/1.5));
+    [pks,locs] = findpeaks(Amp_env_voltage,'MinPeakProminence',mpp,'MinPeakHeight',mph,'MinPeakDistance',mpd);
+    Amp_env_binary2 = NaN(1,length(signal_echobp)); echolocation_timestamps = floor(locs*(length(signal_echobp)/length(Amp_env_voltage))); Amp_env_binary2(echolocation_timestamps) = 0;
+    
+    % Plot
+    figure(); hold on;
+    plot(signal_echobp);
+    scatter([1:5000001],Amp_env_binary2,5,'filled','red');
+    axis tight;
+    close all;
+
+    % echolocation_timestamps contains the timestamps of detected echolocations!
+
+    %% Feeder detection processing: 
+    % bandpass from 2500Hz to 20kHz
+    fpass_lo = 2000; 
+    fpass_hi = 10000; 
+    db_noise = 80;
+    feeder_amp_env_cutoff = 1.5;
+    fband = 50;
+        
+    % Bandpass filter
+    [B,A] = butter(2,[fpass_lo fpass_hi]/(motu_Fs/2));
+    signal_feederbp = filtfilt(B,A,signal);
+
+    % Make the spectrogram of the data (Input the bandpass filtered signal)
+    [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_feederbp, motu_Fs, db_noise, fpass_hi, fband);
+
+    % Run RMS amplitude calcuation (Input the bandpass filtered signal)
+    FigFlag = 1;
+    FS_high_cutoff = 50; % Play with this, set higher or lower depending on kind of input. Maybe 50? 100? for echolocations
+    FS_env = 100; % Default
     [Amp_env_voltage, Power_env] = HumanBat_running_rms(signal_feederbp, motu_Fs, FS_high_cutoff, FS_env, 'filter', FigFlag);
-    Amp_env_voltage = Amp_env_voltage;
+    Amp_env_voltage = Amp_env_voltage*1000;
     
     mpp = 0.2;
     mph = feeder_amp_env_cutoff;
-    mpd = round(192000/200);
+    mpd = round(motu_Fs/800);
     [pks,locs] = findpeaks(Amp_env_voltage,'MinPeakProminence',mpp,'MinPeakHeight',mph,'MinPeakDistance',mpd);
     Amp_env_binary2 = NaN(1,length(signal_feederbp)); feeder_timestamps = round(locs*(length(signal_feederbp)/length(Amp_env_voltage))); Amp_env_binary2(feeder_timestamps) = 0;
     
     % Plot
     figure(); hold on;
-    t2 = (0:(length(Amp_env_voltage)-1))*motu_Fs/(FS_env);
     plot(signal_feederbp);
     scatter([1:5000001],Amp_env_binary2,5,'filled','red');
+    axis tight;
+    close all;
 
     % feeder_timestamps contains timestamps of feeder clicks!
    
     %% Human click detection processing: 
     % bandpass from 10kHz to 40kHz
-    fpass_lo = 10000;
-    fpass_hi = 40000;
+    fpass_lo = 8000;
+    fpass_hi = 30000;
     db_noise = 80;
-    echo_amp_env_cutoff = 0.005;
+    hc_amp_env_cutoff = 10;
 
-    humanclickFilter = designfilt('bandpassfir','FilterOrder',20,'CutoffFrequency1',fpass_lo,'CutoffFrequency2',fpass_hi,'SampleRate',motu_Fs);
-    signal_humanclickbp = filtfilt(humanclickFilter,signal);
+     % Bandpass filter
+    [B,A] = butter(2,[fpass_lo fpass_hi]/(motu_Fs/2));
+    signal_humanclickbp = filtfilt(B,A,signal);
+
 
     % Make the spectrogram of the data (Input the bandpass filtered signal)
     [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_humanclickbp, motu_Fs, db_noise,fpass_hi);
 
     % Run RMS amplitude calcuation (Input the bandpass filtered signal)
     FigFlag = 1;
-    FS_high_cutoff = 50; % Play with this, set higher or lower depending on kind of input. Maybe 50? 100? for echolocations
+    FS_high_cutoff = 100; % Play with this, set higher or lower depending on kind of input. Maybe 50? 100? for echolocations
     FS_env = 100; % Default
     [Amp_env_voltage, Power_env] = HumanBat_running_rms(signal_humanclickbp, motu_Fs, FS_high_cutoff, FS_env, 'filter', FigFlag);
-    Amp_env_voltage = Amp_env_voltage*10;
+    Amp_env_voltage = Amp_env_voltage*10000;
     
     % 2. Use findpeaks to find times of echocoloations 
-    mpp = 0.001;
-    mph = echo_amp_env_cutoff;
-    mpd = ceil((192000*0.02)/(length(signal_humanclickbp)/length(t2)));
+    mpp = 0.1
+    mph = hc_amp_env_cutoff;
+    mpd = ceil((192000*0.02)/(length(signal_humanclickbp)/length(Amp_env_voltage)));
     [pks,locs] = findpeaks(Amp_env_voltage,'MinPeakProminence',mpp,'MinPeakHeight',mph,'MinPeakDistance',mpd)
     Amp_env_binary2 = NaN(1,length(signal_humanclickbp)); humanclick_timestamps = round(locs*(length(signal_humanclickbp)/length(Amp_env_voltage))); Amp_env_binary2(humanclick_timestamps) = 0;
     
     % Plot
     figure(); hold on;
-    t2 = (0:(length(Amp_env_voltage)-1))*motu_Fs/(FS_env);
     plot(signal_humanclickbp);
     scatter([1:5000001],Amp_env_binary2,5,'filled','red');
+    axis tight;
+    close all;
 
     % humanclick_timestamps contains the timestamps of detected human clicks!
 
@@ -204,17 +213,21 @@ for mm = 1:mic_num
     whitenedSignal = real(ifft(whitenedFFTSignal));
     
     whitenedSignal_mm{mm} = whitenedSignal / max(abs(whitenedSignal));
+    whitenedSignal_mm{mm}(1:10) = 0; whitenedSignal_mm{mm}(end-10:end) = 0;
 end
 
 whitenedSignal_allmics = cell2mat(whitenedSignal_mm);
 sum_whitenedSignal_allmics = sum(whitenedSignal_allmics,2);
- 
+
 %% Plot the events in different colors on the raw data and spectogram!
 
 % Zero the timestamps detected above to the start of the signal vector
-echo_events = echolocation_timestamps-event_vec_start; echo_events = echo_events(echo_events>=0); echo_events(echo_events==0) = []; echo_events = echo_events(echo_events<length(signal));
-feeder_events = feeder_timestamps-event_vec_start; feeder_events = feeder_events(feeder_events>=0); feeder_events(feeder_events==0) = []; feeder_events = feeder_events(feeder_events<length(signal));
-humanclick_events = humanclick_timestamps-event_vec_start; humanclick_events = humanclick_events(humanclick_events>=0); humanclick_events(humanclick_events==0) = []; humanclick_events = humanclick_events(humanclick_events<length(signal));
+echo_events = echolocation_timestamps;%-event_vec_start; 
+echo_events = echo_events(echo_events>=0); echo_events(echo_events==0) = []; echo_events = echo_events(echo_events<length(signal));
+feeder_events = feeder_timestamps;%-event_vec_start; 
+feeder_events = feeder_events(feeder_events>=0); feeder_events(feeder_events==0) = []; feeder_events = feeder_events(feeder_events<length(signal));
+humanclick_events = humanclick_timestamps;%-event_vec_start; 
+humanclick_events = humanclick_events(humanclick_events>=0); humanclick_events(humanclick_events==0) = []; humanclick_events = humanclick_events(humanclick_events<length(signal));
 
 % Figure out where in ciholas we are
 start_sample_ciholas = round((event_vec_start-first_ttl_sample)/motu_Fs*ciholas_Fs);
@@ -243,9 +256,9 @@ for mm=1:mic_num
 end
 ee_echo = NaN(1,length(sum_whitenedSignal_allmics)); ee_feeder = NaN(1,length(sum_whitenedSignal_allmics)); ee_humanclick = NaN(1,length(sum_whitenedSignal_allmics));
 ee_echo(echo_events) = 1; ee_feeder(feeder_events) = 1; ee_humanclick(humanclick_events) = 1;
-scatter([1:length(sum_whitenedSignal_allmics)],ee_echo,10,'g');
-scatter([1:length(sum_whitenedSignal_allmics)],ee_humanclick,10,'y');
-scatter([1:length(sum_whitenedSignal_allmics)],ee_feeder,10,'orange');
+scatter([1:length(sum_whitenedSignal_allmics)],ee_echo,5,'filled','g');
+scatter([1:length(sum_whitenedSignal_allmics)],ee_humanclick,5,'filled','y');
+scatter([1:length(sum_whitenedSignal_allmics)],ee_feeder,5,'filled','w');
 set(gca, 'Color', 'k');
 set(gca, 'XColor', 'w');
 set(gca, 'YColor', 'w');
@@ -282,7 +295,7 @@ IMAGE_MODS = log(abs(IMAGE)+1e+2);
 % Above from fb_pretty_sonogram code in FinchScope repo
 IMAGE_MODS_SUM = sum(IMAGE_MODS);
 
-spectrogram_ee_echo = NaN(length(T),1); spectrogram_ee_feeder = NaN(length(T),1); spectrogram_ee_humanclick = NaN(length(T),1);
+spectrogram_ee_echo = NaN(length(T),1); spectrogram_ee_feeder = NaN(length(T),1); spectrogram_ee_hc = NaN(length(T),1);
 spectrogram_ee_echo_idxs = floor(echo_events/(length(sum_whitenedSignal_allmics)/length(T))); spectrogram_ee_feeder_idxs = floor(feeder_events/(length(sum_whitenedSignal_allmics)/length(T))); spectrogram_ee_hc_idxs = floor(humanclick_events/(length(sum_whitenedSignal_allmics)/length(T)));
 if ~isempty(echo_events)
     if spectrogram_ee_echo_idxs(1) == 0; spectrogram_ee_echo_idxs(1) = 1; end;
@@ -301,7 +314,7 @@ colormap(hot)
 imagesc(T,F,IMAGE_MODS); set(gca,'YDir','normal');
 axis tight;
 plot(T, spectrogram_ee_echo','g*','MarkerSize',5); % Mark the peaks
-plot(T, spectrogram_ee_feeder','o*','MarkerSize',5); % Mark the peaks
+plot(T, spectrogram_ee_feeder','w*','MarkerSize',5); % Mark the peaks
 plot(T, spectrogram_ee_hc','y*','MarkerSize',5); % Mark the peaks
 ylabel('Frequency kHz','FontWeight','bold');
 xlabel('time (s)','FontWeight','bold');
@@ -370,10 +383,11 @@ plot(t(t_start_index:t_end_index),normalize(movsum(env(t_start_index:t_end_index
 plot(t(t_start_index:t_end_index),up(t_start_index:t_end_index));
 plot(t(t_start_index:t_end_index),lo(t_start_index:t_end_index));
 plot(t(t_start_index:t_end_index),y(1:length(t(t_start_index:t_end_index))));
-Z = round(above_zero_events/motu_Fs*ciholas_Fs); Z(Z==0)=1;
-binZ = NaN(1,length([t_start_index:t_end_index])); 
-binZ(Z) = 4;
-scatter(t(t_start_index:t_end_index),binZ,'*r');
+Z_echo = round(echo_events/motu_Fs*ciholas_Fs); Z_feeder = round(feeder_events/motu_Fs*ciholas_Fs); Z_hc = round(humanclick_events/motu_Fs*ciholas_Fs);
+Z_echo(Z_echo==0)=1;  Z_feeder(Z_feeder==0)=1; Z_hc(Z_hc==0)=1; 
+binZ_echo = NaN(1,length([t_start_index:t_end_index]));  binZ_feeder = NaN(1,length([t_start_index:t_end_index]));  binZ_hc = NaN(1,length([t_start_index:t_end_index])); 
+binZ_echo(Z_echo) = 4; binZ_feeder(Z_feeder) = 4; binZ_hc(Z_hc) = 4;
+scatter(t(t_start_index:t_end_index),binZ_echo,'*g'); scatter(t(t_start_index:t_end_index),binZ_feeder,'*w'); scatter(t(t_start_index:t_end_index),binZ_hc,'*y');
 [y_up,y_lo] = envelope(y(1:length(t(t_start_index:t_end_index))),ciholas_Fs/10,'peak');     % Envelope of the acceleration signal (noise addedd to avoid problems with splining)
 y_env = normalize(y_up - y_lo,'range'); 
 plot(t(t_start_index:t_end_index),y_up);
@@ -445,10 +459,11 @@ plot(t(t_start_index:t_end_index),normalize(movsum(env(t_start_index:t_end_index
 plot(t(t_start_index:t_end_index),up(t_start_index:t_end_index));
 plot(t(t_start_index:t_end_index),lo(t_start_index:t_end_index));
 plot(t(t_start_index:t_end_index),y(1:length(t(t_start_index:t_end_index))));
-Z = round(above_zero_events/motu_Fs*ciholas_Fs); Z(Z==0)=1;
-binZ = NaN(1,length([t_start_index:t_end_index])); 
-binZ(Z) = 4;
-scatter(t(t_start_index:t_end_index),binZ,'*r');
+Z_echo = round(echo_events/motu_Fs*ciholas_Fs); Z_feeder = round(feeder_events/motu_Fs*ciholas_Fs); Z_hc = round(humanclick_events/motu_Fs*ciholas_Fs);
+Z_echo(Z_echo==0)=1;  Z_feeder(Z_feeder==0)=1; Z_hc(Z_hc==0)=1; 
+binZ_echo = NaN(1,length([t_start_index:t_end_index]));  binZ_feeder = NaN(1,length([t_start_index:t_end_index]));  binZ_hc = NaN(1,length([t_start_index:t_end_index])); 
+binZ_echo(Z_echo) = 4; binZ_feeder(Z_feeder) = 4; binZ_hc(Z_hc) = 4;
+scatter(t(t_start_index:t_end_index),binZ_echo,'*g'); scatter(t(t_start_index:t_end_index),binZ_feeder,'*w'); scatter(t(t_start_index:t_end_index),binZ_hc,'*y');
 [y_up,y_lo] = envelope(y(1:length(t(t_start_index:t_end_index))),ciholas_Fs/10,'peak');     % Envelope of the acceleration signal (noise addedd to avoid problems with splining)
 y_env = normalize(y_up - y_lo,'range'); 
 plot(t(t_start_index:t_end_index),y_up);
@@ -462,17 +477,6 @@ set(gca, 'YColor', 'w');
 set(gcf, 'Color', 'k'); 
 axis tight;
 hold off;
-
-% Clip that segment out and put it on the server 
-
-% if save_audio_and_figure == 1
-% 
-%     clip_name = strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/audio_clips/',num2str(batdate),'_',num2str(Bat),'_event_start_sample_',num2str(desired_event),'.wav');
-%     audiowrite(clip_name, sum_whitenedSignal_allmics, motu_Fs);
-%     
-%     clip_name_figure = strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/audio_clips/',num2str(batdate),'_',num2str(Bat),'_event_start_sample_',num2str(desired_event),'.svg');
-%     saveas(gcf, clip_name_figure, 'svg');
-% end
 
 
 
