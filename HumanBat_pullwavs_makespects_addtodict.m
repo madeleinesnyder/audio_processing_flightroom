@@ -34,6 +34,7 @@ for i=1:length(audio_files)
         user_qc_rating = 0;
     end
 
+    headers = {'filename','sound_type','qc'};
     data_row = table({audio_files(i).name},{sound_type},[user_qc_rating],'VariableNames',headers);
 
     % If this looks good, add the filename ot a runing .mat directionary of

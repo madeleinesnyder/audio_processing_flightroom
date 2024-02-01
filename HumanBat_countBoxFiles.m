@@ -21,9 +21,9 @@ for i=1:length(audio_files)
     end
 end
 
-disp(strcat(num2str(file_count(1)," echolocation snippits.")));
-disp(strcat(num2str(file_count(2)," humanclick snippits.")));
-disp(strcat(num2str(file_count(5)," feeder snippits.")));
-disp(strcat(num2str(file_count(3)," kevin voice snippits.")));
-disp(strcat(num2str(file_count(4)," madeleine voice snippits.")));
+disp(strcat(num2str(file_count(1))," echolocation snippits."));
+disp(strcat(num2str(file_count(2))," humanclick snippits."));
+disp(strcat(num2str(file_count(5))," feeder snippits."));
+disp(strcat(num2str(file_count(3))," kevin voice snippits."));
+disp(strcat(num2str(file_count(4))," madeleine voice snippits."));
 

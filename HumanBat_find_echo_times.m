@@ -94,8 +94,8 @@ function [scaled_zerod_loc,len_chunk] = HumanBat_find_echo_times(batdate,mic,chu
         %% Get the peaks of the summed frequency bands
         
         IMAGE_MODS_SUM = sum(IMAGE_MODS);
-        threshold = 10;
-        peak_dist_threshold_seconds = 0.0012*Fs;%/(length(whitenedSignal)/length(IMAGE_MODS_SUM));
+        threshold = 5;
+        peak_dist_threshold_seconds = 0.0012*Fs;
         p_height = 0.05;
         [idx, loc] = findpeaks(abs(IMAGE_MODS_SUM), 'MinPeakProminence', threshold,'MinPeakDistance',peak_dist_threshold_seconds,'MinPeakHeight',p_height);
         
