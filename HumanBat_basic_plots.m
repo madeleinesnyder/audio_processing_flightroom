@@ -1,5 +1,5 @@
 %% Make basic plots for a segment of unfiltered audio data 
-function [] = HumanBat_basic_plots(signal,fs,sound_type)
+function [] = HumanBat_basic_plots(signal,fs,sound_type,onefig)
 
     Fs = fs; motu_Fs = fs;
     
@@ -65,5 +65,9 @@ function [] = HumanBat_basic_plots(signal,fs,sound_type)
     end
     
     % Make spectrogram using Julie's code.
-    [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_bp, Fs, db_noise, fpass_hi, fband);  
+    if onefig == 0
+        [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats(signal_bp, Fs, db_noise, fpass_hi, fband);  
+    else
+        [to, fo, logB, pg, tError, fError] = HumanBat_Julie_Spec_Only_Bats_onefig(signal_bp, Fs, db_noise, fpass_hi, fband);  
+    end
 end

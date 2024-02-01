@@ -21,7 +21,7 @@ for i=1:length(audio_files)
 
     % Load in the file
     [data,fs] = audioread(strcat(audio_base,audio_files(i).name));
-    HumanBat_basic_plots(data,fs,sound_type);
+    HumanBat_basic_plots(data,fs,sound_type,0);
 
     user_qc_rating = [];
     userinput = input('Useable? "y" = yes, "n" = no :','s');
@@ -52,5 +52,20 @@ for i=1:length(audio_files)
         csv_data_updated = [csv_data;data_row];
         newfilename = strcat(audio_base,'audio_event_qc.csv');
         writetable(csv_data_updated,newfilename);
+    end
+
+    % If the sound looks good save the spectrogram image into the Box
+    % folder 
+    close all;
+    if user_qc_rating == 1 
+        HumanBat_basic_plots(data,fs,sound_type,1);
+        png_name = split(audio_files(i).name,'.');
+        png_name = strcat(png_name{1},'.png');
+        set(gcf,'Units','inches','Position',[0,0,2000,2000]/get(0,'ScreenPixelsPerInch'));
+        print(gcf,png_name,'-dpng','-r300');
+        set(gcf,'Units','normalized','Position',[0.1, 0.1, 0.4 0.4]);
+        close all;
+    else
+        close all;
     end
 end
