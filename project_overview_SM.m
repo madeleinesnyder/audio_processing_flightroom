@@ -69,10 +69,10 @@ bootleg_make_wavs(Bat,batdate);
 
 %% 5. Verify that the SVM correctly classifies these "events"
 
-%% 6. Get the timestamps of confirmed SVM echolocaions
+%% 6. Get the timestamps of confirmed SVM echolocations
 
-%% 7. Plot the echolocations on the flight trajectories
-Bat = 32626; batdate=221125; logger=15; start_buffer=0; end_buffer=0; cluster = 6;
+%% 7. Plot the echolocations on the flight trajectories (start buffer is in samples)
+Bat = 32626; batdate=221126; logger=15; start_buffer=120; end_buffer=120; cluster = 3;
 bootleg_plot_echos_on_flights(Bat,batdate,logger,start_buffer,end_buffer,cluster);
 
 % Load in flight trajectory

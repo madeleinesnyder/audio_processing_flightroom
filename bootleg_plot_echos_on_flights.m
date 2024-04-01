@@ -11,6 +11,9 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,start_buffer,end_
     % load in confirmed echolocation events
     load(strcat(exp_data_path,'audio/saved_echolocation_timestamps.mat'));
     all_audio_events = horzcat(cell2mat(mic_audio_events));
+
+    % Pick out echolocation event samples that are too close to 3ach other 
+    all_audio_events = bootleg_prune_echo_samples(all_audio_events);
            
     flights = []; valid_flight_samples = [];
     for i=1:length(ciholas_flight_struct_resort)
@@ -41,55 +44,56 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,start_buffer,end_
     end
     hold off;
         
-%     % Plot in 1D. linearized
-%     all_flights_idxs = [];
-%     F_temp.flight = {}; F_temp.smp1 = []; F_temp.smp2 = []; F_temp.fclus = []; F_temp.length_m = []; F_temp.pos_stacked = [];
-%     F_temp.arclen = {}; F_temp.arclen_linearized = {}; F_temp.arclen_linearized_dimswap = {}; F_temp.lin_tr_block_counts = []; 
-%     F_temp.arclen_stacked = []; F_temp.arclen_stacked_odd = []; F_temp.arclen_stacked_even = [];
-%     F_temp.arclen_celled = {}; F_temp.pos_celled = {}; F_temp.arclen_celled_even = {}; F_temp.pos_celled_even = {};F_temp.arclen_celled_odd = {}; F_temp.pos_celled_odd = {};
-%     for jj=1:length(ciholas_flight_struct_resort)
-%         if ~isempty(ciholas_flight_struct_resort{jj})
-%             if ciholas_flight_struct_resort{jj}.fclus == cluster
-%                 all_flights_idxs = [all_flights_idxs,jj];
-%                 flight = ciholas_r(ciholas_flight_struct_resort{jj}.fstart_trimmed:ciholas_flight_struct_resort{jj}.fend_trimmed,:);
-%                 F_temp.flight{end+1} = flight;
-%                 F_temp.smp1 = [F_temp.smp1,ciholas_flight_struct_resort{jj}.fstart_trimmed];
-%                 F_temp.smp2 = [F_temp.smp2,ciholas_flight_struct_resort{jj}.fend_trimmed];
-%                 F_temp.fclus = [F_temp.fclus,ciholas_flight_struct_resort{jj}.fclus];
-%                 flight_arclen = [];
-%                 for k=2:length(flight)
-%                     px = flight(1:k,1); py = flight(1:k,2); pz = flight(1:k,3);
-%                     [arclen,seglen] = arclength(px,py,pz);
-%                     flight_arclen(k) = arclen;
-%                 end
-%                 F_temp.arclen{end+1} = flight_arclen;
-%                 F_temp.length_m = [F_temp.length_m,flight_arclen(end)];
-%                 F_temp.arclen_linearized{end+1} = flight_arclen./max(flight_arclen);
-%                 F_temp.arclen_linearized_dimswap{end+1} = (flight_arclen./max(flight_arclen))';
-%                 F_temp.pos_stacked = [F_temp.pos_stacked;flight(:,1:2)];
-%                 F_temp.pos_celled{end+1} = flight(:,1:2);
-%             end
-%         end
-%     end
-%     for jj=1:length(F_temp.arclen_linearized)
-%         if mod(jj,2) == 1
-%             F_temp.arclen_stacked_odd = [F_temp.arclen_stacked_odd;F_temp.arclen_linearized{jj}'];
-%             F_temp.arclen_celled_odd{end+1} = F_temp.arclen_linearized{jj};
-%         elseif mod(jj,2) == 0
-%             F_temp.arclen_stacked_even = [F_temp.arclen_stacked_even;F_temp.arclen_linearized{jj}'];
-%             F_temp.arclen_celled_even{end+1} = F_temp.arclen_linearized{jj};
-%         end
-%         F_temp.arclen_stacked = [F_temp.arclen_stacked;F_temp.arclen_linearized{jj}'];
-%         F_temp.arclen_celled{end+1} = F_temp.arclen_linearized{jj}; 
-% 
-%         if mod(jj,2) == 1
-%             F_temp.pos_celled_odd{end+1} = F_temp.pos_celled{jj};
-%         elseif mod(jj,2) == 0
-%             F_temp.pos_celled_even{end+1} = F_temp.pos_celled{jj};
-%         end
-%     end
-% 
-%     figure(); hold on;
-%     scatter3(F_temp.arclen_celled{i}
+     % Plot in 1D. linearized
+    all_flights_idxs = [];
+    F_temp.flight = {}; F_temp.smp1 = []; F_temp.smp2 = []; F_temp.fclus = []; F_temp.length_m = []; F_temp.pos_stacked = [];
+    F_temp.arclen = {}; F_temp.arclen_linearized = {}; F_temp.arclen_linearized_dimswap = {}; F_temp.lin_tr_block_counts = []; 
+    F_temp.arclen_stacked = []; F_temp.arclen_stacked_odd = []; F_temp.arclen_stacked_even = [];
+    F_temp.arclen_celled = {}; F_temp.pos_celled = {}; F_temp.arclen_celled_even = {}; F_temp.pos_celled_even = {};F_temp.arclen_celled_odd = {}; F_temp.pos_celled_odd = {};
+    for jj=1:length(ciholas_flight_struct_resort)
+        if ~isempty(ciholas_flight_struct_resort{jj})
+            if ciholas_flight_struct_resort{jj}.fclus == cluster
+                all_flights_idxs = [all_flights_idxs,jj];
+                flight = ciholas_r(ciholas_flight_struct_resort{jj}.fstart_trimmed-start_buffer:ciholas_flight_struct_resort{jj}.fend_trimmed+end_buffer,:);
+                audio_events_during_flight = all_audio_events
+                F_temp.flight{end+1} = flight;
+                F_temp.smp1 = [F_temp.smp1,ciholas_flight_struct_resort{jj}.fstart_trimmed];
+                F_temp.smp2 = [F_temp.smp2,ciholas_flight_struct_resort{jj}.fend_trimmed];
+                F_temp.fclus = [F_temp.fclus,ciholas_flight_struct_resort{jj}.fclus];
+                flight_arclen = [];
+                for k=2:length(flight)
+                    px = flight(1:k,1); py = flight(1:k,2); pz = flight(1:k,3);
+                    [arclen,seglen] = arclength(px,py,pz);
+                    flight_arclen(k) = arclen;
+                end
+                F_temp.arclen{end+1} = flight_arclen;
+                F_temp.length_m = [F_temp.length_m,flight_arclen(end)];
+                F_temp.arclen_linearized{end+1} = flight_arclen./max(flight_arclen);
+                F_temp.arclen_linearized_dimswap{end+1} = (flight_arclen./max(flight_arclen))';
+                F_temp.pos_stacked = [F_temp.pos_stacked;flight(:,1:2)];
+                F_temp.pos_celled{end+1} = flight(:,1:2);
+            end
+        end
+    end
+    for jj=1:length(F_temp.arclen_linearized)
+        if mod(jj,2) == 1
+            F_temp.arclen_stacked_odd = [F_temp.arclen_stacked_odd;F_temp.arclen_linearized{jj}'];
+            F_temp.arclen_celled_odd{end+1} = F_temp.arclen_linearized{jj};
+        elseif mod(jj,2) == 0
+            F_temp.arclen_stacked_even = [F_temp.arclen_stacked_even;F_temp.arclen_linearized{jj}'];
+            F_temp.arclen_celled_even{end+1} = F_temp.arclen_linearized{jj};
+        end
+        F_temp.arclen_stacked = [F_temp.arclen_stacked;F_temp.arclen_linearized{jj}'];
+        F_temp.arclen_celled{end+1} = F_temp.arclen_linearized{jj}; 
+
+        if mod(jj,2) == 1
+            F_temp.pos_celled_odd{end+1} = F_temp.pos_celled{jj};
+        elseif mod(jj,2) == 0
+            F_temp.pos_celled_even{end+1} = F_temp.pos_celled{jj};
+        end
+    end
+
+    figure(); hold on;
+    scatter3(F_temp.arclen_celled{i});
 
 end
