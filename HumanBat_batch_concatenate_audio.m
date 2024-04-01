@@ -22,7 +22,7 @@
 % 5. Plot 50ms around all audio events, human-label them, segment and store
 % them for BioSound processing. HumanBat_shortclip_label_and_save.m
 
-batdate_list = [221130];
+batdate_list = [221203];
 
 % For every session in the list...
 for i=1:length(batdate_list)
@@ -30,7 +30,7 @@ for i=1:length(batdate_list)
     disp(strcat("Copying audio for ",num2str(batdate)));
 
     chdir(strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/1464314684/processed/',num2str(batdate)));
-    if ~exist("/audio")
+    if ~exist("audio")
         system('sudo mkdir audio');
     end
     

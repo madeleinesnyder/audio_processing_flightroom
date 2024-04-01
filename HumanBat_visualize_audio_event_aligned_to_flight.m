@@ -6,18 +6,22 @@ clear all; close all;
 
 % For a given bat, and session
 Bat = 32626; logger = 15;
-batdate = 221126;
+batdate = 221130;
 
+% For now don't save any figures.
 save_audio_and_figure = 0;
 
 % Audio and flight sampling rates
 motu_Fs = 192000;
 ciholas_Fs = 120;
-mic_num = 4;
-context_interval_ = 5000000;
+mic_num = 4; % number of mic
+context_interval_ = 5000000; % Number of samples we are looking across to see if aligned. Keep small bc memory issues. UNLESS you refactor code to downsampl!!
+
+%% Pick which sample you want to start at 
+desired_event = 208464052;
 
 %% Load in the audio data
-audio_base = strcat('C:\Users\YartsevLabComputer5\Box\Audio_Project_2024\',num2str(batdate),'\chunked_audio_data\');
+audio_base = strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/1464314684/processed/',num2str(batdate),'/audio/');
 load(strcat(audio_base,'event_timestamps.mat'),'event_locs');
 
 % Load in ttl data
@@ -50,14 +54,17 @@ sorted_events = unique(sort([event_locs{1},event_locs{2},event_locs{3},event_loc
 
 % Sample
 % Find which chunk and seg this event is from.
-file_parts = dir(audio_base); 
-file_parts = strsplit(file_parts(end-7).name,'_');
-max_chunks = str2num(file_parts{end-2});
+%file_parts = dir(audio_base); 
+%file_parts = strsplit(file_parts(end-7).name,'_');
+if batdate==221130
+    max_chunks=7;
+end
+%max_chunks = str2num(file_parts{end-2});
 running_chunk_start = 0;
 desired_chunk = []; chunk_start = []; amount_into_chunk = [];
 for tt = 1:max_chunks
 
-    chunk_filename = dir(strcat(audio_base,'\audioConCat_mic_1_segment_chunk_',num2str(tt),'_break_*.mat'));
+    chunk_filename = dir(strcat(audio_base,'/audioConCat_mic_1_segment_chunk_',num2str(tt),'_break_*.mat'));
     load(strcat(audio_base,chunk_filename.name));
     len_chunk = length(audioConCat);
     
@@ -128,6 +135,7 @@ above_zero_events = above_zero_events(above_zero_events>=0);
 above_zero_events(above_zero_events==0) = [];
 above_zero_events = above_zero_events(above_zero_events<length(sum_whitenedSignal_allmics));
 
+%% Get the starting sample for ciholas datastream
 start_sample_ciholas = round((event_vec_start-first_ttl_sample)/motu_Fs*ciholas_Fs);
 if start_sample_ciholas == 0; start_sample_ciholas = 1; end;
 end_sample_ciholas = round((event_vec_end-first_ttl_sample)/motu_Fs*ciholas_Fs);
