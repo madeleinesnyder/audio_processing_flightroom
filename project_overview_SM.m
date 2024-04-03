@@ -1,11 +1,16 @@
 %% Project
 
-
 %% 1. Gather .wav data
+
+% TO DO
 
 %% 2. Get bioSound values
 
+% TO DO (SANJANA)
+
 %% 3. Train SVM on biosound values and labels 
+
+% TO DO 
 
 %% Table of values
 
@@ -69,18 +74,18 @@ bootleg_make_wavs(Bat,batdate);
 
 %% 5. Verify that the SVM correctly classifies these "events"
 
+% TO DO (Sanjana)
+
 %% 6. Get the timestamps of confirmed SVM echolocations
 
-%% 7. Plot the echolocations on the flight trajectories (start buffer is in samples)
-Bat = 32626; batdate=221126; logger=15; start_buffer=120; end_buffer=120; cluster = 3;
-bootleg_plot_echos_on_flights(Bat,batdate,logger,start_buffer,end_buffer,cluster);
+% TO DO (Madeleine)
 
-% Load in flight trajectory
-% Load in timestamps of confirmed echolocations
-% Plot the echolocation timestamps on the flight trajectories of one type
-% and see if there is a pattern
-% Plot the echolocation timestamps on the linearized flight trajectories of
-% one type and see if there is a pattern 
+%% 7. Plot the echolocations on the flight trajectories (start buffer is in samples)
+Bat = 32626; batdate=221126; logger=15; start_buffer=120; end_buffer=120; cluster = 2; plot_units = 1; unit=1;
+bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units)
+
+%% 8. Plot the echolocations on the flights trajectories seperated by human landing target
+bootleg_plot_echos_MvsK(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units);
 
  
 
