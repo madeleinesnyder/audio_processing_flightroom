@@ -5,7 +5,7 @@ for mm=1:4
     audio_events_s = [];
     mic = mm;
     Round = '1464314684';
-    batdate = 221129;
+    batdate = 221130;
     [audio_data,motu_Fs] = audioread(strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat_KQ/',Round,'/processed/',num2str(batdate),'/audio/Flight_Mic',num2str(mic),'_',num2str(batdate),'_.wav'));
 
     % chop out segment of data we want to look at
