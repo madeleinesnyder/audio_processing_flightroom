@@ -1,99 +1,54 @@
 %% Project
 
-%% 1. Gather .wav data
+%% 1. Gather .wav data for training data
 
-% TO DO
+% DONE (MAREESA)
 
-%% 2. Get bioSound values
+%% 2. Get bioSound values for training data
 
-% TO DO (SANJANA)
+% DONE (SANJANA)
 
-%% 3. Train SVM on biosound values and labels 
+%% 3. Train SVM on hand selected data
 
-% TO DO 
+[SVMModel] = bootleg_svm_base_model();
 
-%% Table of values
 
-data = readtable('biosound_values.csv');
+%% 4. BATCH PROCESSING!! (B-steps):
 
-% Create lable vector. 1 is echolocation, 0 is other.
-for i=1:length(data.calltype)
-    if strcmp(data.calltype(i),'echo')
-        y(i) = 1;
-    elseif strcmp(data.calltype(i),'feeder')
-        y(i) = 0;
-    else
-        y(i) = 2;
-    end
-end
-
-% Insert labels into table.
-D = data(:,3:end);
-D.labels = y';
-
-% Make SVM
-features = table2array(D(:,[3]));
-labels = table2array(D(:,end));
-SVMModel = fitcecoc(features, labels);
-
-savedconfmat = {};
-num_runs = 10;
-for i = 1:num_runs
-
-    % Cross-fold validation (partition the data into 1/5ths
-    cv = cvpartition(size(features,1),'HoldOut',0.2);
-    idx = cv.test;
+    %% B1. Extract all "events" from audio signal in janky way
     
-    % Separate to training and test sets
-    featuresTrain = features(~idx,:);
-    labelsTrain = labels(~idx,:);
-    featuresTest = features(idx,:);
-    labelsTest = labels(idx,:);
+    bootleg_findpeaks.m 
     
-    % Train the model on the training set (80% of data)
-    SVMModel = fitcecoc(featuresTrain, labelsTrain);
+    %% B2. Turn these timestamps into wav files (upload to box)
     
-    % Predict using the test set (20% of data)
-    predictions = predict(SVMModel, featuresTest);
+    bootleg_make_wavs(Bat,batdate);
     
-    % Evaluate the classifier (see how predictions match actual labels)
-    confMat = confusionmat(labelsTest, predictions);
-    accuracy = sum(diag(confMat)) / sum(confMat(:));
-    fprintf('Accuracy: %.2f%%\n', accuracy * 100);
+    %% B3 Run these through biosound and get the features for each sample (Biosound)
+    
+    %% B4. Read out the biosound measures for each of these audio events 
+    
+    [spectral_means,timestamps] = bootleg_read_biosound_csvs(batdate);
+    
+    %% B5. Use SVM to classify this batch of samples as yes or no echolocation. Get valid timestamps. SAVE.
+    
+    predictions = predict(SVMModel, spectral_means);
+    valid_echolocation_timestamps = timestamps(predictions==1);
+    valid_timestamp_filename = save(strcat('/home/madeleine/mnt/server2/users/KQMS/HumanBat/1464314684/processed/',num2str(batdate),'/audio/saved_echolocation_timestamps.mat'),'mic_audio_events');
+    save(valid_timestamp_filename),'valid_echolocation_timestamps');
 
-    savedconfmat{end+1} = confMat;
-end
 
-%% 4. Extract all "events" from audio signal and run those events thorugh the SVM
+    %% B6. Look at random samples to see if they make sense. 
+    bootleg_plot_sample(batdate,timestamps)
 
-% bootleg_findpeaks.m 
 
-%% 5. Turn these timestamps into wav files (upload to box)
 
-bootleg_make_wavs(Bat,batdate);
+   
+%% PLOTTING WITH FLIGHT DATA
 
-%% 5. Verify that the SVM correctly classifies these "events"
-
-% TO DO (Sanjana)
-
-%% 6. Get the timestamps of confirmed SVM echolocations
-
-% TO DO (Madeleine)
-
-%% 7. Plot the echolocations on the flight trajectories (start buffer is in samples)
-Bat = 32626; batdate=221126; logger=15; start_buffer=120; end_buffer=120; cluster = 2; plot_units = 1; unit=1;
+%% 5. Plot the echolocations on the flight trajectories (start buffer is in samples)
+Bat = 32626; batdate=221126; logger=15; start_buffer=0; end_buffer=0; cluster = 2; plot_units = 1; unit=1;
 bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units)
 
-%% 8. Plot the echolocations on the flights trajectories seperated by human landing target
-bootleg_plot_echos_MvsK(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units);
-
-% Load in flight trajectory
-% Load in timestamps of confirmed echolocations
-% Plot the echolocation timestamps on the flight trajectories of one type
-% and see if there is a pattern
-% Plot the echolocation timestamps on the linearized flight trajectories of
-% one type and see if there is a pattern 
-
- 
+%% Perform permutation test to see if the echolocation rate at landing is significantly different between flights to M and flights to K
 
 

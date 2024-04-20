@@ -99,37 +99,18 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer
     end
 
     % Plot in 2D ONLY BAT 1
-    figure(); 
-    subplot(1,2,1); hold on; xlim([-2900 2900]); ylim([-2600 2600]); zlim([0 2300]);
-    title(strcat("Bat ",num2str(Bat)," - date - ",num2str(batdate)," - Cluster ",num2str(cluster)," flights to M. Echolocations = r*"));
-    M_samples = [];
+    figure(); hold on; xlim([-2900 2900]); ylim([-2600 2600]); zlim([0 2300]);
+    title(strcat("Bat ",num2str(Bat)," - date - ",num2str(batdate)," - Cluster ",num2str(cluster)," flights. Echolocations = r*"));
     for i=1:length(flights)
         if ismember(flights(i),Flight_Group_Matrix_To_M)
-            M_samples = [M_samples,ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed];
+            M_samples = flig
             plot3(ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,1),...
                   ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,2),...
                   ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,3),'Color',[0.8 0.8 0.8]);
         end
     end
     for i=1:length(useable_echo_timestamps)
-        if who_echod(i) == 1 & ismember(useable_echo_timestamps(i),M_samples)
-            scatter3(ciholas_r(useable_echo_timestamps(i),1),ciholas_r(useable_echo_timestamps(i),2),ciholas_r(useable_echo_timestamps(i),3),'*r');
-        end
-    end
-    hold off;
-    subplot(1,2,2); hold on; xlim([-2900 2900]); ylim([-2600 2600]); zlim([0 2300]);
-    title(strcat("Bat ",num2str(Bat)," - date - ",num2str(batdate)," - Cluster ",num2str(cluster)," flights to K. Echolocations = r*"));
-    K_samples = [];
-    for i=1:length(flights)
-        if ismember(flights(i),Flight_Group_Matrix_To_K)
-            K_samples = [K_samples,ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed];
-            plot3(ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,1),...
-                  ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,2),...
-                  ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,3),'Color',[0.8 0.8 0.8]);
-        end
-    end
-    for i=1:length(useable_echo_timestamps)
-        if who_echod(i) == 1 & ismember(useable_echo_timestamps(i),K_samples)
+        if who_echod(i) == 1 & (useable_echo_timestamps(i) )
             scatter3(ciholas_r(useable_echo_timestamps(i),1),ciholas_r(useable_echo_timestamps(i),2),ciholas_r(useable_echo_timestamps(i),3),'*r');
         end
     end
@@ -137,7 +118,7 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer
 
 
 
-    %% Plot in 1D linearized with ephys.
+    % Plot in 1D linearized with ephys.
     all_audio_events = all_audio_events*120;
     all_flights_idxs = [];
     F_temp.flight = {}; F_temp.smp1 = []; F_temp.smp2 = []; F_temp.fclus = []; F_temp.length_m = []; F_temp.pos_stacked = [];
@@ -219,5 +200,9 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer
         end
     end
     hold off;
+
+
+
+
 
 end

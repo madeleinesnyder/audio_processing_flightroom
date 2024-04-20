@@ -7,6 +7,7 @@ function [] = bootleg_plot_echos_MvsK(Bat,batdate,logger,unit,start_buffer,end_b
     load(strcat(exp_data_path,'ephys/logger',num2str(logger),'/extracted_data/B_ephys_data_aligned.mat'));
     load(strcat(exp_data_path,'ciholas/pruned_resorted_trimmed_ciholas_bat_final_flight_structure_',num2str(Bat),'.mat'));
     load(strcat(exp_data_path,'ciholas/aligned_bat_position_data_',num2str(Bat),'.mat'));
+    obat = load(strcat(exp_data_path,'ciholas/aligned_bat_position_data_',num2str(Bat),'.mat'));
     load(strcat(exp_data_path,'ciholas/aligned_human_position_data','.mat'));
     madeleine=2; kevin=4;
 
@@ -51,12 +52,21 @@ function [] = bootleg_plot_echos_MvsK(Bat,batdate,logger,unit,start_buffer,end_b
         end
     end
 
+    valid_flight_samples = [valid_flight_samples_M,valid_flight_samples_K];
+
+    [useable_echo_timestamps,who_echod,probably_not_echos,which_mics] = bootleg_who_echolocated(ciholas_r,obat.ciholas_r,mic_audio_events,valid_flight_samples);
+    useable_echo_timestamps(probably_not_echos) = [];
+    who_echod(probably_not_echos) = [];
+    which_mics(probably_not_echos) = [];
+    useable_echo_timestamps_bat1 = useable_echo_timestamps(who_echod==1);
+    useable_echo_timestamps_bat2 = useable_echo_timestamps(who_echod==2);
+
     useable_echo_timestamps_M = []; useable_echo_timestamps_K = [];
-    for j=1:length(all_audio_events)
-        if ismember(round(all_audio_events(j)*120),valid_flight_samples_K)
-            useable_echo_timestamps_K = [useable_echo_timestamps_K,round(all_audio_events(j)*120)];
-        elseif ismember(round(all_audio_events(j)*120),valid_flight_samples_M)
-            useable_echo_timestamps_M = [useable_echo_timestamps_M,round(all_audio_events(j)*120)];
+    for j=1:length(useable_echo_timestamps_bat1)
+        if ismember(useable_echo_timestamps_bat1(j),valid_flight_samples_K)
+            useable_echo_timestamps_K = [useable_echo_timestamps_K,useable_echo_timestamps_bat1(i)];
+        elseif ismember(useable_echo_timestamps_bat1(i),valid_flight_samples_M)
+            useable_echo_timestamps_M = [useable_echo_timestamps_M,useable_echo_timestamps_bat1(i)];
         end
     end
 
