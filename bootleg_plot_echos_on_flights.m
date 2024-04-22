@@ -1,4 +1,4 @@
-function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units)
+function [M_flight_hz_samples,K_flight_hz_samples] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units)
 
     %% Plot the echolocation time stamps on the flight traces
 
@@ -102,13 +102,15 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer
     figure(); 
     subplot(1,2,1); hold on; xlim([-2900 2900]); ylim([-2600 2600]); zlim([0 2300]);
     title(strcat("Bat ",num2str(Bat)," - date - ",num2str(batdate)," - Cluster ",num2str(cluster)," flights to M. Echolocations = r*"));
-    M_samples = [];
+    M_samples = []; M_hz_window_samples = {};
     for i=1:length(flights)
         if ismember(flights(i),Flight_Group_Matrix_To_M)
             M_samples = [M_samples,ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed];
+            M_hz_window_samples{end+1} = [ciholas_flight_struct_resort{flights(i)}.fend_trimmed-120:ciholas_flight_struct_resort{flights(i)}.fend_trimmed];
             plot3(ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,1),...
                   ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,2),...
                   ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,3),'Color',[0.8 0.8 0.8]);
+        
         end
     end
     for i=1:length(useable_echo_timestamps)
@@ -119,10 +121,11 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer
     hold off;
     subplot(1,2,2); hold on; xlim([-2900 2900]); ylim([-2600 2600]); zlim([0 2300]);
     title(strcat("Bat ",num2str(Bat)," - date - ",num2str(batdate)," - Cluster ",num2str(cluster)," flights to K. Echolocations = r*"));
-    K_samples = [];
+    K_samples = []; K_hz_window_samples = {};
     for i=1:length(flights)
         if ismember(flights(i),Flight_Group_Matrix_To_K)
             K_samples = [K_samples,ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed];
+            K_hz_window_samples{end+1} = [ciholas_flight_struct_resort{flights(i)}.fend_trimmed-120:ciholas_flight_struct_resort{flights(i)}.fend_trimmed];
             plot3(ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,1),...
                   ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,2),...
                   ciholas_r(ciholas_flight_struct_resort{flights(i)}.fstart_trimmed:ciholas_flight_struct_resort{flights(i)}.fend_trimmed,3),'Color',[0.8 0.8 0.8]);
@@ -134,6 +137,38 @@ function [] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer
         end
     end
     hold off;
+
+    % Get echolocation rate in last 1 second before landing
+    M_flight_hz_samples = [];
+    for i=1:length(M_hz_window_samples)
+        if isempty(M_hz_window_samples{i})
+            M_flight_hz_samples = [M_flight_hz_samples,0];
+        else
+            temp_useable_echos = [];
+            for j=1:length(useable_echo_timestamps)
+                if ismember(useable_echo_timestamps(j),M_hz_window_samples{i})
+                    temp_useable_echos = [temp_useable_echos,useable_echo_timestamps(j)];
+                end
+            end
+            M_flight_hz_samples = [M_flight_hz_samples,length(temp_useable_echos)];
+        end
+    end
+
+    K_flight_hz_samples = [];
+    for i=1:length(K_hz_window_samples)
+        if isempty(K_hz_window_samples{i})
+            K_flight_hz_samples = [K_flight_hz_samples,0];
+        else
+            temp_useable_echos = [];
+            for j=1:length(useable_echo_timestamps)
+                if ismember(useable_echo_timestamps(j),K_hz_window_samples{i})
+                    temp_useable_echos = [temp_useable_echos,useable_echo_timestamps(j)];
+                end
+            end
+            K_flight_hz_samples = [K_flight_hz_samples,length(temp_useable_echos)];
+        end
+    end
+    
 
 
 
