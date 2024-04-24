@@ -46,14 +46,21 @@
 
 %% 5. Plot the echolocations on the flight trajectories (start buffer is in samples)
 Bat = 32626; batdate=221128; logger=15; start_buffer=0; end_buffer=0; cluster = 4; plot_units = 1; unit=1;
-[M_flight_hz_samples,K_flight_hz_samples] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units)
+[M_flight_hz_samples_L,K_flight_hz_samples_L,M_flight_hz_samples_T,K_flight_hz_samples_T] = bootleg_plot_echos_on_flights(Bat,batdate,logger,unit,start_buffer,end_buffer,cluster,plot_units)
 
 %% Perform permutation test to see if the echolocation rate at landing is significantly different between flights to M and flights to K
-[sig_diff] = bootleg_permutation_test(M_flight_hz_samples,K_flight_hz_samples);
+[sig_diff_L,sig_diff_T] = bootleg_permutation_test(M_flight_hz_samples_L,K_flight_hz_samples_L,M_flight_hz_samples_T,K_flight_hz_samples_T);
 
-if sig_diff == 1
+if sig_diff_L == 1
     disp("Significnat difference in mean number of echolocations upon landing to M v.s. to K!");
 else
     disp("No sig diff in echolocation rate upon landing on M v.s. K");
+end
+
+
+if sig_diff_T == 1
+    disp("Significnat difference in mean number of echolocations upon takeoff to M v.s. to K!");
+else
+    disp("No sig diff in echolocation rate upon takoff on M v.s. K");
 end
 
